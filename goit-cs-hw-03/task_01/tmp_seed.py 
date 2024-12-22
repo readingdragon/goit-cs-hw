@@ -1,0 +1,86 @@
+import faker
+from random import randint, choice
+import psycopg2
+
+NUMBER_USERS = 3
+NUMBER_STATUS = 5
+NUMBER_TASKS = 5
+
+def generate_fake_data(number_users, number_status, number_tasks) -> tuple(): # type: ignore
+    fake_users = []
+    fake_status = []
+    fake_tasks = []
+
+    fake_data = faker.Faker()
+
+    for _ in range(number_users):
+        fake_users.append(fake_data.user_name())
+
+    for _ in range(number_status):
+        fake_status.append(fake_data.state())
+
+    for _ in range(number_tasks):
+        fake_tasks.append(fake_data.random_lowercase_letter())
+
+    return fake_users, fake_status, fake_tasks
+
+def prepare_data(users, status, tasks) -> tuple(): # type: ignore
+    for_users = []
+    for user in users:
+        for_users.append((user, ))
+
+    for_status = []
+
+    for stat in status:
+        for_status.append((stat, choice(posts), randint(1, NUMBER_USERS)))
+    for_tasks = []
+    for tsk in tasks:
+        for_tasks.append((tsk, choice(posts), randint(1, NUMBER_TASKS)))
+
+    return for_users, for_status, for_tasks
+
+def insert_data_to_db(users, status, tasks) -> None:
+    try:
+        connection_params = {
+            'dbname': 'postgres',
+            'user': 'dev',
+            'password': 'pass4db',
+            'host': 'localhost',
+            'port': 5432
+        }
+    # створюємо з'єднання з БД
+        with psycopg2.connect(**connection_params) as con:
+            with con.cursor() as cur:
+                cur = con.cursor()
+                sql_to_users = """INSERT INTO users(fullname, email)
+                                    VALUES (?, ?)"""
+
+                cur.executemany(sql_to_users, users)
+
+                sql_to_status = """INSERT INTO status(name)
+                                    VALUES (?)"""
+
+                cur.executemany(sql_to_status, status)
+
+
+                sql_to_tasks = """INSERT INTO tasks(title, description, status_id, user_id)
+                                    VALUES (?, ?, ?, ?)"""
+
+                cur.executemany(sql_to_tasks, tasks)
+
+            con.commit()
+            print('Tables updated successfully.')
+    except Exception as e:
+        print(f'Error: {e}')
+
+
+
+    with sqlite3.connect('salary.db') as con:
+
+
+        con.commit()
+
+if __name__ == "__main__":
+    companies, employees, posts = prepare_data(*generate_fake_data(NUMBER_USERS, NUMBER_STATUS, NUMBER_TASKS))
+    insert_data_to_db(companies, employees, posts)
+

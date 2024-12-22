@@ -1,0 +1,47 @@
+import psycopg2
+from faker import Faker
+
+connection = psycopg2.connect(
+            dbname='postgres',
+            user='dev',
+            password='pass4db',
+            host='localhost',
+            port='5432'
+)
+cursor = connection.cursor()
+
+faker = Faker()
+
+# статуси
+statuses = ['new', 'in progress', 'completed']
+for status in statuses:
+    cursor.execute("INSERT INTO status (name) VALUES (%s) ON CONFLICT DO NOTHING", (status,))
+
+# користувачі
+for _ in range(10):
+    fullname = faker.name()
+    email = faker.unique.email()
+    cursor.execute("INSERT INTO users (fullname, email) VALUES (%s, %s)", (fullname, email))
+
+# таски
+cursor.execute("SELECT id FROM status")
+status_ids = [row[0] for row in cursor.fetchall()]
+
+cursor.execute("SELECT id FROM users")
+user_ids = [row[0] for row in cursor.fetchall()]
+
+for _ in range(20):
+    title = faker.sentence(nb_words=6)
+    description = faker.text()
+    status_id = faker.random.choice(status_ids)
+    user_id = faker.random.choice(user_ids)
+    cursor.execute(
+        "INSERT INTO tasks (title, description, status_id, user_id) VALUES (%s, %s, %s, %s)",
+        (title, description, status_id, user_id)
+    )
+
+connection.commit()
+cursor.close()
+connection.close()
+
+print("Seed data has been successfully added!")

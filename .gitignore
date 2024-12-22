@@ -1,0 +1,11 @@
+# Ігнорувати папки
+node_modules/
+__pycache__/
+env/
+vscode/
+.vscode/
+
+# Ігнорувати файли
+*.log
+*.env
+*.vscode
